@@ -1,17 +1,19 @@
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Calendar;
 import java.util.Scanner;
 
 public class Main {
 
     private static SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
 
+    private static Database database;
+
     private static String helpMessage = "Type \"connect\" to connect to the database" +
             "\nCommands while connected: \n" +
             "disconnect - Terminates connection to the database\n" +
             "drive [hours] - Simulates a drive of length hours generating metrics, replace hours with an integer number of hours that were driven. 1 hour is default. Date is randomized per driving session\n" +
-            "NOTE: date inputs are in the format mm/dd/yyyy" +
+            "NOTE: date inputs are in the format mm/dd/yyyy\n" +
             "check [date] - Checks the driving metrics provided by the dashboard with optional date, if not provided will return complete database\n" +
             "detailed [date] - provides a completed detailed list of all metrics generated during the drive on the optional date,if not provided will return complete database\n" +
             "help - Show this message\n" +
@@ -32,6 +34,7 @@ public class Main {
 
     private static boolean execute(String command) {
         try {
+            Calendar date;
             if (command.startsWith("connect"))
                 testConnectDB();
             else if (command.startsWith("drive")) {
@@ -44,14 +47,20 @@ public class Main {
                 if (command.trim().equalsIgnoreCase("check"))
                     // Default to 1 hour if not specified
                     getMetrics(null, false);
-                else
-                    getMetrics(sdf.parse(command.split(" ", 2)[1]), false);
+                else {
+                    date = new Calendar.Builder().setInstant((sdf.parse(command.split(" ", 2)[1]))).build();
+                    date.set(Calendar.MONTH, 9);
+                    getMetrics(date, false);
+                }
             } else if (command.startsWith("detailed")) {
                 if (command.trim().equalsIgnoreCase("detailed"))
                     // Default to 1 hour if not specified
                     getMetrics(null, true);
-                else
-                    getMetrics(sdf.parse(command.split(" ", 2)[1]), true);
+                else {
+                    date = new Calendar.Builder().setInstant((sdf.parse(command.split(" ", 2)[1]))).build();
+                    date.set(Calendar.MONTH, 9);
+                    getMetrics(date, true);
+                }
             } else if (command.startsWith("disconnect"))
                 System.out.println(Database.disconnect());
             else if (command.startsWith("help"))
@@ -65,12 +74,12 @@ public class Main {
         return true;
     }
 
-    private static void getMetrics(Date date, boolean detailed) {
+    private static void getMetrics(Calendar date, boolean detailed) {
         if (date == null) {
             ArrayList<Metric> metrics = Database.getMetrics();
             if (detailed) {
                 for (Metric m : metrics) {
-                    System.out.printf("Date: %s, Speed: %s, Direction: %s\n", (m.getDate().getMonth() + 1) + "/" + m.getDate().getDate() + "/" + (m.getDate().getYear() + 1900), m.getSpeed(), m.getDirection());
+                    System.out.printf("Date: %s, Speed: %s, Direction: %s\n", (m.getDate().get(Calendar.MONTH)) + "/" + m.getDate().get(Calendar.DAY_OF_MONTH) + "/" + (m.getDate().get(Calendar.YEAR)), m.getSpeed(), m.getDirection());
                 }
             }
             Grade grade = Database.getGrade(metrics);
@@ -79,7 +88,7 @@ public class Main {
             ArrayList<Metric> metrics = Database.getMetricsForDate(date);
             if (detailed) {
                 for (Metric m : metrics) {
-                    System.out.printf("Date: %s, Speed: %s, Direction: %s\n", (m.getDate().getMonth() + 1) + "/" + m.getDate().getDate() + "/" + (m.getDate().getYear() + 1900), m.getSpeed(), m.getDirection());
+                    System.out.printf("Date: %s, Speed: %s, Direction: %s\n", (m.getDate().get(Calendar.MONTH)) + "/" + m.getDate().get(Calendar.DAY_OF_MONTH) + "/" + (m.getDate().get(Calendar.YEAR)), m.getSpeed(), m.getDirection());
                 }
             }
             Grade grade = Database.getGrade(metrics);
@@ -92,12 +101,12 @@ public class Main {
         for (int i = 0; i < 100 * hours; i++) {
             Database.uploadMetric(new Metric(seed));
         }
-        Date date = new Date(2018, 9, seed);
-        System.out.printf("Metrics uploaded successfully for the date %s\n", date.getMonth() + "/" + date.getDate() + "/" + date.getYear());
+        Calendar date = new Calendar.Builder().setDate(2018, 9, seed).build();
+        System.out.printf("Metrics uploaded successfully for the date %s\n", (date.get(Calendar.MONTH)) + "/" + date.get(Calendar.DAY_OF_MONTH) + "/" + (date.get(Calendar.YEAR)));
     }
 
     private static void testConnectDB() {
-        Database.connect();
+        database = Database.connect();
         System.out.println("Connection Successful");
     }
 

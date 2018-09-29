@@ -1,25 +1,26 @@
+import java.util.Calendar;
 import java.util.Date;
 
-public class Metric {
+class Metric {
     private Direction direction;
-    private Date date;
+    private Calendar date;
     private int speed;
 
-    public Date getDate() {
+    Calendar getDate() {
         return date;
     }
 
-    public Metric(int seed) {
+    Metric(int seed) {
         this.speed = (int) Accelerometer.getAccelerometer().getSpeed();
         this.direction = Accelerometer.getAccelerometer().getDirection();
-        this.date = new Date(2018 - 1900, 9 - 1, seed);
+        date = new Calendar.Builder().setDate(2018, 9, seed).build();
     }
 
-    public Direction getDirection() {
+    Direction getDirection() {
         return direction;
     }
 
-    public int getSpeed() {
+    int getSpeed() {
         return speed;
     }
 }

@@ -1,11 +1,9 @@
-import javafx.util.Pair;
-
+import java.util.Calendar;
 import java.nio.channels.NotYetConnectedException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.stream.Collectors;
 
-public class Database {
+class Database {
 
     private static Database database = null;
 
@@ -19,35 +17,39 @@ public class Database {
         metrics = new ArrayList<>();
     }
 
-    public static Database connect() {
+    static Database connect() {
         if (database == null && disconnectedBackup == null) database = new Database();
         else if (database == null) database = disconnectedBackup;
         return database;
     }
 
-    public static String disconnect() throws NotYetConnectedException {
+    static String disconnect() throws NotYetConnectedException {
         if (database == null) throw new NotYetConnectedException();
         disconnectedBackup = database;
         database = null;
         return "Disconnected successfully";
     }
 
-    public static void uploadMetric(Metric m) throws NotYetConnectedException {
+    static void uploadMetric(Metric m) throws NotYetConnectedException {
         if (database == null) throw new NotYetConnectedException();
         metrics.add(m);
     }
 
-    public static ArrayList<Metric> getMetrics()throws NotYetConnectedException {
+    static ArrayList<Metric> getMetrics()throws NotYetConnectedException {
         if (database == null) throw new NotYetConnectedException();
         return metrics;
     }
 
-    public static ArrayList<Metric> getMetricsForDate(Date date)throws NotYetConnectedException {
+    static ArrayList<Metric> getMetricsForDate(Calendar date)throws NotYetConnectedException {
         if (database == null) throw new NotYetConnectedException();
-        return metrics.stream().filter(metric -> metric.getDate().equals(date)).collect(Collectors.toCollection(ArrayList::new));
+        return metrics.stream().filter(metric ->
+                (metric.getDate().get(Calendar.DAY_OF_MONTH) == date.get(Calendar.DAY_OF_MONTH))
+                && (metric.getDate().get(Calendar.MONTH) == date.get(Calendar.MONTH))
+                && (metric.getDate().get(Calendar.YEAR) == date.get(Calendar.YEAR)))
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    public static Grade getGrade(ArrayList<Metric> metrics) throws NotYetConnectedException {
+    static Grade getGrade(ArrayList<Metric> metrics) throws NotYetConnectedException {
         if (database == null) throw new NotYetConnectedException();
         parseDrivingData(metrics);
         return grade;

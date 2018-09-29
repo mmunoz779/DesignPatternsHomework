@@ -1,23 +1,23 @@
-public class Grade {
+class Grade {
 
     private char letterGrade;
     private double numericalRating;
 
-    public Grade(double numericalRating, long certainty) {
+    Grade(double numericalRating, long certainty) {
         this.numericalRating = (numericalRating / certainty);
         this.letterGrade = numberToLetterGrade(this.numericalRating);
     }
 
-    public char getLetterGrade() {
+    char getLetterGrade() {
         return this.letterGrade;
     }
 
-    public double getNumericalRating() {
+    double getNumericalRating() {
         return numericalRating;
     }
 
     private char numberToLetterGrade(double rating) {
-        double percent = (rating / 70);
+        double percent = (rating / 80);
         if (((int) (percent * 100) % 100) > 90) {
             return 'A';
         } else if (isBetween(80, 89, (int) (percent * 100) % 100)) {
