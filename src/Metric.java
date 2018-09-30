@@ -10,10 +10,14 @@ class Metric {
         return date;
     }
 
-    Metric(int seed) {
+    private Metric(int seed) {
         this.speed = (int) Accelerometer.getAccelerometer().getSpeed();
         this.direction = Accelerometer.getAccelerometer().getDirection();
         date = new Calendar.Builder().setDate(2018, 9, seed).build();
+    }
+
+    static Metric getMetric(int seed) {
+        return new Metric(seed);
     }
 
     Direction getDirection() {

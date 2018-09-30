@@ -1,3 +1,4 @@
+import java.nio.channels.NotYetConnectedException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -8,6 +9,8 @@ public class Main {
     private static SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
 
     private static Database database;
+
+    private static ArrayList<Metric> offlineCache;
 
     private static String helpMessage = "Type \"connect\" to connect to the database" +
             "\nCommands while connected: \n" +
@@ -62,7 +65,7 @@ public class Main {
                     getMetrics(date, true);
                 }
             } else if (command.startsWith("disconnect"))
-                System.out.println(Database.disconnect());
+                System.out.println(database.disconnect());
             else if (command.startsWith("help"))
                 System.out.print(helpMessage);
             else
@@ -76,37 +79,53 @@ public class Main {
 
     private static void getMetrics(Calendar date, boolean detailed) {
         if (date == null) {
-            ArrayList<Metric> metrics = Database.getMetrics();
+            ArrayList<Metric> metrics = database.getMetrics();
             if (detailed) {
                 for (Metric m : metrics) {
                     System.out.printf("Date: %s, Speed: %s, Direction: %s\n", (m.getDate().get(Calendar.MONTH)) + "/" + m.getDate().get(Calendar.DAY_OF_MONTH) + "/" + (m.getDate().get(Calendar.YEAR)), m.getSpeed(), m.getDirection());
                 }
             }
-            Grade grade = Database.getGrade(metrics);
+            Grade grade = database.getGrade(metrics);
             System.out.println("The grade for this time period is: " + grade.getLetterGrade() + " with a rating of " + (int) grade.getNumericalRating());
         } else {
-            ArrayList<Metric> metrics = Database.getMetricsForDate(date);
+            ArrayList<Metric> metrics = database.getMetricsForDate(date);
             if (detailed) {
                 for (Metric m : metrics) {
                     System.out.printf("Date: %s, Speed: %s, Direction: %s\n", (m.getDate().get(Calendar.MONTH)) + "/" + m.getDate().get(Calendar.DAY_OF_MONTH) + "/" + (m.getDate().get(Calendar.YEAR)), m.getSpeed(), m.getDirection());
                 }
             }
-            Grade grade = Database.getGrade(metrics);
+            Grade grade = database.getGrade(metrics);
             System.out.println("The grade for this time period is: " + grade.getLetterGrade() + " with a rating of " + (int) grade.getNumericalRating());
         }
     }
 
     private static void generateMetrics(int hours) {
         int seed = (int) ((Math.random() * 29)) + 1;
-        for (int i = 0; i < 100 * hours; i++) {
-            Database.uploadMetric(new Metric(seed));
+        try {
+            for (int i = 0; i < 100 * hours; i++) {
+                database.uploadMetric(Metric.getMetric(seed));
+            }
+            Calendar date = new Calendar.Builder().setDate(2018, 9, seed).build();
+            System.out.printf("Metrics uploaded successfully for the date %s\n", (date.get(Calendar.MONTH)) + "/" + date.get(Calendar.DAY_OF_MONTH) + "/" + (date.get(Calendar.YEAR)));
+        } catch (NullPointerException | NotYetConnectedException e){
+            if (offlineCache == null) offlineCache = new ArrayList<>();
+            for (int i = 0; i < 100 * hours; i++) {
+                offlineCache.add(Metric.getMetric(seed));
+            }
+            Calendar date = new Calendar.Builder().setDate(2018, 9, seed).build();
+            System.out.printf("Unable to connect to Database, the metrics for %s will be uploaded once the connection is reestablished.\n", (date.get(Calendar.MONTH)) + "/" + date.get(Calendar.DAY_OF_MONTH) + "/" + (date.get(Calendar.YEAR)));
         }
-        Calendar date = new Calendar.Builder().setDate(2018, 9, seed).build();
-        System.out.printf("Metrics uploaded successfully for the date %s\n", (date.get(Calendar.MONTH)) + "/" + date.get(Calendar.DAY_OF_MONTH) + "/" + (date.get(Calendar.YEAR)));
     }
 
     private static void testConnectDB() {
         database = Database.connect();
+        if (offlineCache != null) {
+            for (Metric m : offlineCache) {
+                database.uploadMetric(m);
+            }
+            offlineCache = null;
+            System.out.println("Metrics collected offline have been uploaded");
+        }
         System.out.println("Connection Successful");
     }
 

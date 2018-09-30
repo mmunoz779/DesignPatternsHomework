@@ -23,24 +23,24 @@ class Database {
         return database;
     }
 
-    static String disconnect() throws NotYetConnectedException {
+    String disconnect() throws NotYetConnectedException {
         if (database == null) throw new NotYetConnectedException();
         disconnectedBackup = database;
         database = null;
         return "Disconnected successfully";
     }
 
-    static void uploadMetric(Metric m) throws NotYetConnectedException {
+    void uploadMetric(Metric m) throws NotYetConnectedException {
         if (database == null) throw new NotYetConnectedException();
         metrics.add(m);
     }
 
-    static ArrayList<Metric> getMetrics()throws NotYetConnectedException {
+    ArrayList<Metric> getMetrics()throws NotYetConnectedException {
         if (database == null) throw new NotYetConnectedException();
         return metrics;
     }
 
-    static ArrayList<Metric> getMetricsForDate(Calendar date)throws NotYetConnectedException {
+    ArrayList<Metric> getMetricsForDate(Calendar date)throws NotYetConnectedException {
         if (database == null) throw new NotYetConnectedException();
         return metrics.stream().filter(metric ->
                 (metric.getDate().get(Calendar.DAY_OF_MONTH) == date.get(Calendar.DAY_OF_MONTH))
@@ -49,7 +49,7 @@ class Database {
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    static Grade getGrade(ArrayList<Metric> metrics) throws NotYetConnectedException {
+    Grade getGrade(ArrayList<Metric> metrics) throws NotYetConnectedException {
         if (database == null) throw new NotYetConnectedException();
         parseDrivingData(metrics);
         return grade;
